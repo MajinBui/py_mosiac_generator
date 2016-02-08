@@ -47,4 +47,4 @@ py_mosiac_generator/tests_normalize/
 venv/
 images/
 images.old/
-__pycache__
+py_mosiac_generator/__pycache__ 
