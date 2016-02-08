@@ -7,7 +7,7 @@ from math import sqrt, pow
 ICON_SIZE_X = 32
 ICON_SIZE_Y = 32
 
-def euclidean_distance_HSV(cord_p, cord_q):
+def euclidean_distance(cord_p, cord_q):
     total = 0
     for i in range(0, len(cord_p)):
         total += pow(cord_p[i]-cord_q[i], 2)
@@ -36,7 +36,7 @@ def find_nearest_color(icon_list, RGB):
     current_icon = None
     for icon in icon_list:
         HSV_LS = icon["rgb"]
-        temp = euclidean_distance_HSV(HSV_LS, HSV_RS)
+        temp = euclidean_distance(HSV_LS, HSV_RS)
         if (current_icon is None or current_low > temp):
             current_low = temp
             current_icon = icon
@@ -63,16 +63,29 @@ def resize_icon_list(icon_list, size):
 
 
 def generate_mosaic(original_image_path, icon_list):
+    print("Loading files...")
     original_image = Image.open(original_image_path)
     mosaic_image = Image.new("RGB", (original_image.width*ICON_SIZE_X, original_image.width*ICON_SIZE_Y))
 
     icon_list = resize_icon_list(icon_list,(ICON_SIZE_X,ICON_SIZE_Y))
-
+    pixel_count = original_image.width * original_image.height
+    print("Recreating image...")
+    count = 0
     for w in range(0, original_image.width):
         for h in range(0, original_image.height):
+            temp_string = ""
+            for i in range(0, 20):
+                if (i < int(count/pixel_count * 20)):
+                    temp_string = temp_string + "#"
+                else:
+                    temp_string += " "
+            output_string = "[{0}]".format(temp_string)
+            print(output_string + " " + str(int(count/pixel_count * 100)) + "%", end='\r')
+
             original_pixel_rgb = original_image.getpixel((w,h))
             icon = find_nearest_color(icon_list, original_pixel_rgb)
 
             mosaic_image.paste(icon["image"],(w*ICON_SIZE_X,h*ICON_SIZE_X))
-
+            count = count + 1
+    print("[####################]100%")
     return mosaic_image
