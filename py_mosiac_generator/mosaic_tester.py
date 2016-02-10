@@ -7,7 +7,7 @@ from cluster_math import *
 def main():
     option = int(input("Press 1 to make a mosiac, press 2 to normalize a picture, 0 to exit: "))
     if option is 99:
-        normalize_picture("./tests/Eiffel-1.jpg", "tests_normalize/output14.png", 9)
+        normalize_picture("./tests/Eiffel-1.jpg", "tests_normalize/output16.png", 7)
     elif option is 0:
         exit()
     else:
