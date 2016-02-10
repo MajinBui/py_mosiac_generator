@@ -26,7 +26,10 @@ def print_loading_bar(current, denominator, num_of_hashtags):
         else:
             temp_string += " "
     output_string = "[{0}]".format(temp_string)
-    print(output_string + " " + str(int(current/denominator * 100)) + "%", end='\r')
+    if current < denominator:
+        print(output_string + " " + str(int(current/denominator * 100)) + "%", end='\r')
+    else:
+        print(output_string + " " + str(int(current/denominator * 100)) + "%", end='\n')
 
 class Cluster:
 
@@ -41,10 +44,11 @@ class Cluster:
         if (isinstance(uppercoord, list)):
             self.uppercoord = uppercoord
 
-    def plot(self, coord):
+    def plot(self, coord, count):
         if ((coord[0] >= self.lowercoord[0] and coord[1] >= self.lowercoord[1] and coord[2] >= self.lowercoord[2]) and
             (coord[0] < self.uppercoord[0] and coord[1] < self.uppercoord[1] and coord[2] < self.uppercoord[2])):
-            self.plots.append(coord)
+            for i in range(count):
+                self.plots.append(coord)
             return True
 
     def purge(self, coord):
@@ -96,14 +100,15 @@ class ClusterMap:
         for cluster in self.cluster_list:
             cluster.purge(coord)
 
-    def plot(self, coord):
+    def plot(self, coord, count):
         """
             Searches through the cluster list and plots the coordinate if a
             cluster is found.
             :param coord the coordinate to plot
+            :param count the number of times to plot the coord
         """
         for cluster in self.cluster_list:
-            cluster.plot(coord)
+            cluster.plot(coord, count)
 
     def average_colors(self):
         """
@@ -113,6 +118,12 @@ class ClusterMap:
             cluster.average_color()
 
 def normalize_picture(input_image_path, output_image_path, num_of_colors):
+    """
+        Reduces the amount of colors a picture has has.
+        :param input_image_path the path input file
+        :param output_image_path the output file path
+        :param num_of_colors the number of colors to reduce the image to
+    """
     print("Loading files...")
     input_image = Image.open(input_image_path)
     output_image = Image.new("RGB", (input_image.width, input_image.height))
@@ -121,10 +132,9 @@ def normalize_picture(input_image_path, output_image_path, num_of_colors):
     print("Analyzing image...")
     count = 0
     for color in input_image.getcolors(maxcolors=1000000):
+        clusterMap.plot(list(color[1]), color[0])
+        count = count + color[0]
         print_loading_bar(count, pixel_count, 20)
-        clusterMap.plot(list(color[1]))
-        count = count + 1
-    print("[####################]100%")
 
     clusterMap.average_colors()
 
@@ -135,11 +145,10 @@ def normalize_picture(input_image_path, output_image_path, num_of_colors):
     print("Recreating image...")
     for w in range(0, output_image.width):
         for h in range(0, output_image.height):
-            print_loading_bar(count, pixel_count, 20)
             input_pixel_rgb = input_image.getpixel((w,h))
             color = find_nearest_coord(color_list, input_pixel_rgb)
             temp = Image.new("RGB", (1,1), tuple(color))
             output_image.paste(temp, box=(w,h))
             count = count + 1
-    print("[####################]100%")
+            print_loading_bar(count, pixel_count, 20)
     output_image.save(output_image_path)
